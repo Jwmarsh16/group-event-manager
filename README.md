@@ -1,2 +1,3 @@
-# Project Name Here
-Fill out your project details here in your README.md
+# friend-events
+
+friend-events will be a website used for groups of friends to create and coordinate different events with each other.
