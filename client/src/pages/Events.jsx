@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { fetchEvents, createEvent } from '../slices/eventSlice';
+import { fetchEvents, createEvent } from '../redux/eventSlice';
 
 function Events() {
   const dispatch = useDispatch();
