@@ -12,8 +12,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
 app.config['JWT_TOKEN_LOCATION'] = ['cookies']
-app.config['JWT_COOKIE_SECURE'] = False  # Set to True in production when using HTTPS
-app.config['JWT_COOKIE_SAMESITE'] = 'Strict'
+app.config['JWT_COOKIE_SECURE'] = True  # Set to True in production when using HTTPS
+app.config['JWT_COOKIE_SAMESITE'] = 'None'
 app.config['JWT_COOKIE_HTTPONLY'] = True
 app.config['JWT_ACCESS_COOKIE_PATH'] = '/'
 app.config['JWT_REFRESH_COOKIE_PATH'] = '/token/refresh'
@@ -29,4 +29,5 @@ migrate = Migrate(app, db)
 db.init_app(app)
 
 api = Api(app)
-CORS(app, supports_credentials=True, origins=["http://localhost:3000"])  # Make sure the CORS origins match your frontend URL
+CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+  # Make sure the CORS origins match your frontend URL

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { fetchGroups, createGroup } from '../slices/groupSlice';
+import { fetchGroups, createGroup } from '../redux/groupSlice';
 
 function Groups() {
   const dispatch = useDispatch();

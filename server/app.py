@@ -28,6 +28,25 @@ def assign_access_refresh_tokens(user_id, url):
 def home():
     return "Welcome to the Event Manager API!"
 
+# Handle OPTIONS requests globally
+@app.after_request
+def apply_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = 'http://127.0.0.1:5173'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    return response
+
+# Preflight OPTIONS handler for all routes
+@app.route('/<path:path>', methods=['OPTIONS'])
+def options_handler(path):
+    response = make_response()
+    response.headers['Access-Control-Allow-Origin'] = 'http://127.0.0.1:5173'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    return response, 200
+
 # Register Resource
 class Register(Resource):
     def post(self):
@@ -51,10 +70,24 @@ class Register(Resource):
         except ValueError as e:
             return {"message": str(e)}, 400
 
+        # Create access token
         access_token = create_access_token(identity=new_user.id)
-        response = make_response({"message": "User registered successfully", "user": new_user.to_dict()})
-        response.set_cookie('access_token', access_token, httponly=True, secure=True, samesite='Strict')
-        return response, 201
+
+        # Prepare the response data
+        response_data = {"message": "User registered successfully", "user": new_user.to_dict()}
+
+        # Use `make_response` to create a response object
+        response = make_response(jsonify(response_data))  # Convert response_data to JSON
+
+        # Set cookies and response headers
+        response.set_cookie('access_token', access_token, httponly=True, secure=True, samesite='None')
+
+        # Set the status code directly on the response object
+        response.status_code = 201  # Set the status code for the response
+
+        return response  # Return the response object directly
+
+
 
 
 # Login Resource

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchGroupById, deleteGroup } from '../slices/groupSlice'; // Import deleteGroup action
+import { fetchGroupById, deleteGroup } from '../redux/groupSlice'; // Import deleteGroup action
 
 function GroupDetail() {
   const { id } = useParams();

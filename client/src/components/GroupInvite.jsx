@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchUsers } from '../slices/userSlice';
-import { sendGroupInvite } from '../slices/groupSlice'; // Import the sendGroupInvite action
+import { fetchUsers } from '../redux/userSlice';
+import { sendGroupInvite } from '../redux/groupSlice'; // Import the sendGroupInvite action
 import { useParams } from 'react-router-dom';
 
 function GroupInvite() {

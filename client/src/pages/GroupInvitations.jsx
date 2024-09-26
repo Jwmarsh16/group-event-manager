@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchGroupInvitations, acceptGroupInvite, denyGroupInvite } from '../slices/groupSlice';
+import { fetchGroupInvitations, acceptGroupInvite, denyGroupInvite } from '../redux/groupSlice';
 
 function GroupInvitations() {
   const dispatch = useDispatch();
