@@ -1,27 +1,45 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+
+// Helper function to handle fetch requests with credentials
+const fetchWithCredentials = (url, options = {}) => fetch(url, {
+  ...options,
+  credentials: 'include', // Ensure cookies are sent with the request
+  headers: {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  },
+});
 
 // Thunk for fetching RSVPs for a specific event
 export const fetchRSVPs = createAsyncThunk('rsvps/fetchRSVPs', async (eventId, thunkAPI) => {
   try {
-    const response = await axios.get(`http://localhost:5555/events/${eventId}/rsvps`, {
-      withCredentials: true, // Ensure cookies are sent with the request
-    });
-    return response.data;
+    const response = await fetchWithCredentials(`/api/events/${eventId}/rsvps`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch RSVPs');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to fetch RSVPs');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to fetch RSVPs');
   }
 });
 
 // Thunk for creating a new RSVP
 export const createRSVP = createAsyncThunk('rsvps/createRSVP', async (rsvpData, thunkAPI) => {
   try {
-    const response = await axios.post('http://localhost:5555/rsvps', rsvpData, {
-      withCredentials: true, // Ensure cookies are sent with the request
+    const response = await fetchWithCredentials('/api/rsvps', {
+      method: 'POST',
+      body: JSON.stringify(rsvpData),
     });
-    return response.data;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to submit RSVP');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to submit RSVP');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to submit RSVP');
   }
 });
 

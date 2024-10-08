@@ -1,81 +1,115 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+
+// Helper function to handle fetch requests with credentials
+const fetchWithCredentials = (url, options = {}) => fetch(url, {
+  ...options,
+  credentials: 'include', // Ensure cookies are sent with the request
+  headers: {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  },
+});
 
 // Thunk to fetch all events
 export const fetchEvents = createAsyncThunk('events/fetchEvents', async (_, thunkAPI) => {
   try {
-    const response = await axios.get('http://localhost:5555/events', {
-      withCredentials: true, // Ensure cookies are sent with the request
-    });
-    return response.data;
+    const response = await fetchWithCredentials('/api/events');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch events');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error fetching events:', error);
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to fetch events');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to fetch events');
   }
 });
 
 // Thunk to search events by name
 export const searchEvents = createAsyncThunk('events/searchEvents', async (query, thunkAPI) => {
   try {
-    const response = await axios.get(`http://localhost:5555/events?q=${query}`, {
-      withCredentials: true, // Ensure cookies are sent with the request
-    });
-    return response.data;
+    const response = await fetchWithCredentials(`/api/events?q=${encodeURIComponent(query)}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to search events');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error searching events:', error);
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to search events');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to search events');
   }
 });
 
 // Thunk to fetch a specific event by ID
 export const fetchEventById = createAsyncThunk('events/fetchEventById', async (id, thunkAPI) => {
   try {
-    const response = await axios.get(`http://localhost:5555/events/${id}`, {
-      withCredentials: true, // Ensure cookies are sent with the request
-    });
-    return response.data;
+    const response = await fetchWithCredentials(`/api/events/${id}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch event');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error fetching event by ID:', error);
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to fetch event');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to fetch event');
   }
 });
 
 // Thunk to create a new event
 export const createEvent = createAsyncThunk('events/createEvent', async (eventData, thunkAPI) => {
   try {
-    const response = await axios.post('http://localhost:5555/events', eventData, {
-      withCredentials: true, // Ensure cookies are sent with the request
+    const response = await fetchWithCredentials('/api/events', {
+      method: 'POST',
+      body: JSON.stringify(eventData),
     });
-    return response.data;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to create event');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error creating event:', error);
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to create event');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to create event');
   }
 });
 
 // Thunk to update an event
 export const updateEvent = createAsyncThunk('events/updateEvent', async ({ id, eventData }, thunkAPI) => {
   try {
-    const response = await axios.put(`http://localhost:5555/events/${id}`, eventData, {
-      withCredentials: true, // Ensure cookies are sent with the request
+    const response = await fetchWithCredentials(`/api/events/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(eventData),
     });
-    return response.data;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to update event');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error updating event:', error);
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to update event');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to update event');
   }
 });
 
 // Thunk to delete an event
 export const deleteEvent = createAsyncThunk('events/deleteEvent', async (id, thunkAPI) => {
   try {
-    await axios.delete(`http://localhost:5555/events/${id}`, {
-      withCredentials: true, // Ensure cookies are sent with the request
+    const response = await fetchWithCredentials(`/api/events/${id}`, {
+      method: 'DELETE',
     });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to delete event');
+    }
     return { id }; // Return the event ID to remove it from the state
   } catch (error) {
     console.error('Error deleting event:', error);
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to delete event');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to delete event');
   }
 });
 

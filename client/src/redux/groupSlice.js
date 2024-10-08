@@ -1,81 +1,112 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+
+// Helper function to handle fetch requests with credentials
+const fetchWithCredentials = (url, options = {}) => fetch(url, {
+  ...options,
+  credentials: 'include', // Ensure cookies are sent with the request
+  headers: {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  },
+});
 
 // Thunk to fetch all groups
 export const fetchGroups = createAsyncThunk('groups/fetchGroups', async (_, thunkAPI) => {
   try {
-    const response = await axios.get('http://localhost:5555/groups', {
-      withCredentials: true,  // Include cookies in the request
-    });
-    return response.data;
+    const response = await fetchWithCredentials('/api/groups');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch groups');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error fetching groups:', error);
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to fetch groups');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to fetch groups');
   }
 });
 
 // Thunk to search groups by name
 export const searchGroups = createAsyncThunk('groups/searchGroups', async (query, thunkAPI) => {
   try {
-    const response = await axios.get(`http://localhost:5555/groups?q=${query}`, {
-      withCredentials: true,  // Include cookies in the request
-    });
-    return response.data;
+    const response = await fetchWithCredentials(`/api/groups?q=${encodeURIComponent(query)}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to search groups');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error searching groups:', error);
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to search groups');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to search groups');
   }
 });
 
 // Thunk to fetch a specific group by ID
 export const fetchGroupById = createAsyncThunk('groups/fetchGroupById', async (id, thunkAPI) => {
   try {
-    const response = await axios.get(`http://localhost:5555/groups/${id}`, {
-      withCredentials: true,  // Include cookies in the request
-    });
-    return response.data;
+    const response = await fetchWithCredentials(`/api/groups/${id}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch group');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error fetching group by ID:', error);
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to fetch group');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to fetch group');
   }
 });
 
 // Thunk to create a new group
 export const createGroup = createAsyncThunk('groups/createGroup', async (groupData, thunkAPI) => {
   try {
-    const response = await axios.post('http://localhost:5555/groups', groupData, {
-      withCredentials: true,  // Include cookies in the request
+    const response = await fetchWithCredentials('/api/groups', {
+      method: 'POST',
+      body: JSON.stringify(groupData),
     });
-    return response.data;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to create group');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error creating group:', error);
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to create group');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to create group');
   }
 });
 
 // Thunk to delete a group
 export const deleteGroup = createAsyncThunk('groups/deleteGroup', async (groupId, thunkAPI) => {
   try {
-    const response = await axios.delete(`http://localhost:5555/groups/${groupId}`, {
-      withCredentials: true,  // Include cookies in the request
+    const response = await fetchWithCredentials(`/api/groups/${groupId}`, {
+      method: 'DELETE',
     });
-    return response.data;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to delete group');
+    }
+    return { groupId };
   } catch (error) {
     console.error('Error deleting group:', error);
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to delete group');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to delete group');
   }
 });
 
 // Thunk to fetch group invitations
 export const fetchGroupInvitations = createAsyncThunk('groups/fetchGroupInvitations', async (_, thunkAPI) => {
   try {
-    const response = await axios.get('http://localhost:5555/invitations', {
-      withCredentials: true,  // Include cookies in the request
-    });
-    return response.data;
+    const response = await fetchWithCredentials('/api/invitations');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch invitations');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error fetching invitations:', error);
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to fetch invitations');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to fetch invitations');
   }
 });
 
@@ -84,46 +115,59 @@ export const sendGroupInvite = createAsyncThunk(
   'groups/sendGroupInvite',
   async ({ groupId, invitedUserId }, thunkAPI) => {
     try {
-      const response = await axios.post(
-        `http://localhost:5555/groups/${groupId}/invite`,
-        {
-          group_id: groupId,      // Include group_id in the request body
-          invited_user_id: invitedUserId
-        },
-        {
-          withCredentials: true,  // Include cookies in the request
-        }
-      );
-      return response.data;
+      const response = await fetchWithCredentials(`/api/groups/${groupId}/invite`, {
+        method: 'POST',
+        body: JSON.stringify({
+          group_id: groupId,
+          invited_user_id: invitedUserId,
+        }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send invitation');
+      }
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('Error sending group invitation:', error);
-      return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to send invitation');
+      return thunkAPI.rejectWithValue(error.message || 'Failed to send invitation');
     }
   }
 );
 
+// Thunk to accept a group invitation
 export const acceptGroupInvite = createAsyncThunk('groups/acceptGroupInvite', async (inviteId, thunkAPI) => {
   try {
-    const response = await axios.put(`http://localhost:5555/invitations/${inviteId}/accept`, {}, {
-      withCredentials: true,  // Include cookies in the request
+    const response = await fetchWithCredentials(`/api/invitations/${inviteId}/accept`, {
+      method: 'PUT',
     });
-    return response.data;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to accept invitation');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error accepting invitation:', error);
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to accept invitation');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to accept invitation');
   }
 });
 
 // Thunk to deny a group invitation
 export const denyGroupInvite = createAsyncThunk('groups/denyGroupInvite', async (inviteId, thunkAPI) => {
   try {
-    const response = await axios.put(`http://localhost:5555/invitations/${inviteId}/deny`, {}, {
-      withCredentials: true,  // Include cookies in the request
+    const response = await fetchWithCredentials(`/api/invitations/${inviteId}/deny`, {
+      method: 'PUT',
     });
-    return response.data;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to deny invitation');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error denying invitation:', error);
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to deny invitation');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to deny invitation');
   }
 });
 
@@ -131,7 +175,7 @@ const groupSlice = createSlice({
   name: 'groups',
   initialState: {
     groups: [],
-    searchResults: [], // Store search results
+    searchResults: [],
     currentGroup: null,
     invitations: [],
     loading: false,
@@ -147,12 +191,11 @@ const groupSlice = createSlice({
       state.inviteError = null;
     },
     resetSearchResults: (state) => {
-      state.searchResults = []; // Reset search results
+      state.searchResults = [];
     },
   },
   extraReducers: (builder) => {
     builder
-      // Handle fetchGroups
       .addCase(fetchGroups.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -166,21 +209,19 @@ const groupSlice = createSlice({
         state.error = action.payload || 'Failed to fetch groups';
       })
 
-      // Handle searchGroup
       .addCase(searchGroups.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(searchGroups.fulfilled, (state, action) => {
         state.loading = false;
-        state.searchResults = action.payload; // Replace current groups with search results
+        state.searchResults = action.payload;
       })
       .addCase(searchGroups.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Failed to search groups';
       })
 
-      // Handle fetchGroupById
       .addCase(fetchGroupById.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -194,7 +235,6 @@ const groupSlice = createSlice({
         state.error = action.payload || 'Failed to fetch group';
       })
 
-      // Handle createGroup
       .addCase(createGroup.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -208,21 +248,19 @@ const groupSlice = createSlice({
         state.error = action.payload || 'Failed to create group';
       })
 
-      // Handle deleteGroup
       .addCase(deleteGroup.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(deleteGroup.fulfilled, (state, action) => {
         state.loading = false;
-        state.groups = state.groups.filter(group => group.id !== action.meta.arg); // Remove the deleted group from state
+        state.groups = state.groups.filter(group => group.id !== action.payload.groupId);
       })
       .addCase(deleteGroup.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Failed to delete group';
       })
 
-      // Handle sendGroupInvite
       .addCase(sendGroupInvite.pending, (state) => {
         state.inviteStatus = null;
         state.inviteError = null;
@@ -238,7 +276,6 @@ const groupSlice = createSlice({
         state.loading = false;
       })
 
-      // Handle fetchGroupInvitations
       .addCase(fetchGroupInvitations.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -252,13 +289,12 @@ const groupSlice = createSlice({
         state.error = action.payload || 'Failed to fetch invitations';
       })
 
-      // Handle acceptGroupInvite
       .addCase(acceptGroupInvite.pending, (state) => {
         state.inviteStatus = null;
         state.inviteError = null;
         state.loading = true;
       })
-      .addCase(acceptGroupInvite.fulfilled, (state, action) => {
+      .addCase(acceptGroupInvite.fulfilled, (state) => {
         state.inviteStatus = 'success';
         state.loading = false;
       })
@@ -268,13 +304,12 @@ const groupSlice = createSlice({
         state.loading = false;
       })
 
-      // Handle denyGroupInvite
       .addCase(denyGroupInvite.pending, (state) => {
         state.inviteStatus = null;
         state.inviteError = null;
         state.loading = true;
       })
-      .addCase(denyGroupInvite.fulfilled, (state, action) => {
+      .addCase(denyGroupInvite.fulfilled, (state) => {
         state.inviteStatus = 'success';
         state.loading = false;
       })

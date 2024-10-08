@@ -1,43 +1,58 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { createSelector } from 'reselect';
-import axios from 'axios';
+
+// Helper function to handle fetch requests with credentials
+const fetchWithCredentials = (url, options = {}) => fetch(url, {
+  ...options,
+  credentials: 'include', // Ensure cookies are sent with the request
+  headers: {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  },
+});
 
 // Thunk to fetch all users
 export const fetchUsers = createAsyncThunk('users/fetchUsers', async (_, thunkAPI) => {
   try {
-    const response = await axios.get('http://localhost:5555/users', {
-      withCredentials: true, // Ensure cookies are sent with the request
-    });
-    return response.data;
+    const response = await fetchWithCredentials('/api/users');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch users');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
-    const message = error.response?.data?.message || 'Failed to fetch users';
-    return thunkAPI.rejectWithValue(message);
+    return thunkAPI.rejectWithValue(error.message || 'Failed to fetch users');
   }
 });
 
 // Thunk to search users by name
 export const searchUsers = createAsyncThunk('users/searchUsers', async (query, thunkAPI) => {
   try {
-    const response = await axios.get(`http://localhost:5555/users?q=${query}`, {
-      withCredentials: true, // Ensure cookies are sent with the request
-    });
-    return response.data;
+    const response = await fetchWithCredentials(`/api/users?q=${encodeURIComponent(query)}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to search users');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
-    const message = error.response?.data?.message || 'Failed to search users';
-    return thunkAPI.rejectWithValue(message);
+    return thunkAPI.rejectWithValue(error.message || 'Failed to search users');
   }
 });
 
 // Thunk to fetch the current user's profile
 export const fetchUserProfileById = createAsyncThunk('users/fetchUserProfileById', async (id, thunkAPI) => {
   try {
-    const response = await axios.get(`/api/profile/${id}`, {
-      withCredentials: true, // Ensure cookies are sent with the request
-    });
-    return response.data;
+    const response = await fetchWithCredentials(`/api/profile/${id}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch user profile');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
-    const message = error.response?.data?.message || 'Failed to fetch user profile';
-    return thunkAPI.rejectWithValue(message);
+    return thunkAPI.rejectWithValue(error.message || 'Failed to fetch user profile');
   }
 });
 

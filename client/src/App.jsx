@@ -11,6 +11,7 @@ import GroupInvite from './components/GroupInvite';
 import GroupInvitations from './pages/GroupInvitations';
 import UserProfile from './pages/UserProfile';
 import Home from './pages/Home';
+import Goodbye from './components/Goodbye';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path="/invitations" element={<GroupInvitations />} />
         <Route path="/profile/:id" element={<UserProfile />} />
         <Route path="/profile" element={<UserProfile />} />
+        <Route path="/goodbye" element={<Goodbye />} />
       </Routes>
     </Router>
   );

@@ -168,6 +168,28 @@ class UserProfile(Resource):
             ]
         }, 200
     
+class DeleteProfile(Resource):
+    @jwt_required()
+    def delete(self):
+        current_user_id = get_jwt_identity()
+        print(f"Attempting to delete user with ID: {current_user_id}")
+
+        user = User.query.get_or_404(current_user_id)
+        try:
+            db.session.delete(user)
+            db.session.commit()
+            print(f"User with ID {current_user_id} deleted successfully")
+        except Exception as e:
+            print(f"Error occurred during user deletion: {e}")
+            return {"message": "Failed to delete user"}, 500
+
+        # Return a response message directly, not a `Response` object inside JSON
+        response = make_response(jsonify({"message": "User deleted successfully"}))  # Use jsonify here
+        unset_jwt_cookies(response)  # Unset any JWT-related cookies
+
+        return response  # Return the response directly without converting it
+
+
 # Event Resource for listing and searching events
 class EventList(Resource):
     def get(self):
@@ -434,6 +456,8 @@ api.add_resource(CommentList, '/events/<int:event_id>/comments')
 api.add_resource(EventComments, '/events/<int:event_id>/comments')
 api.add_resource(AcceptGroupInvitation, '/invitations/<int:invitation_id>/accept')
 api.add_resource(DenyGroupInvitation, '/invitations/<int:invitation_id>/deny')
+# Add the resource to handle user profile deletion
+api.add_resource(DeleteProfile, '/profile/delete')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)

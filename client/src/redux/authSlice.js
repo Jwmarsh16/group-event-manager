@@ -1,42 +1,71 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+
+// Helper function to handle fetch requests
+const fetchWithCredentials = (url, options) => fetch(url, {
+  ...options,
+  credentials: 'include',
+  headers: {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  },
+});
 
 // Thunks for login and registration
 export const registerUser = createAsyncThunk('auth/registerUser', async (userData, thunkAPI) => {
   try {
-    const response = await axios.post('/api/register', userData, { withCredentials: true });
-    
-    // Assuming the server returns the registered user data
-    const user = response.data.user;
-    return { user };
+    const response = await fetchWithCredentials('/api/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Failed to register');
+
+    return { user: data.user };
   } catch (error) {
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to register');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to register');
   }
 });
 
 export const login = createAsyncThunk('auth/login', async ({ username, password }, thunkAPI) => {
   try {
-    const response = await axios.post('/api/login', 
-      { username, password }, 
-      { withCredentials: true } // Ensure cookies are sent with the request
-    );
+    const response = await fetchWithCredentials('/api/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
 
-    // Assuming the server returns the user ID along with the token
-    const userId = response.data.user.id;
-    return { id: userId };
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Failed to login');
+
+    return { id: data.user.id };
   } catch (error) {
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to login');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to login');
   }
 });
 
 export const logout = createAsyncThunk('auth/logout', async (_, thunkAPI) => {
   try {
-    await axios.post('http://localhost:5555/logout', {}, {
-      withCredentials: true, // Ensure cookies are sent with the request
+    const response = await fetchWithCredentials('/api/logout', {
+      method: 'POST',
     });
-    return true; // Or any other confirmation data you want to pass
+
+    if (!response.ok) throw new Error('Failed to logout');
+    return true;
   } catch (error) {
-    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to logout');
+    return thunkAPI.rejectWithValue(error.message || 'Failed to logout');
+  }
+});
+
+export const deleteProfile = createAsyncThunk('auth/deleteProfile', async (_, thunkAPI) => {
+  try {
+    const response = await fetchWithCredentials('/api/profile/delete', {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) throw new Error('Failed to delete profile');
+    return await response.json();
+  } catch (error) {
+    return thunkAPI.rejectWithValue(error.message || 'Failed to delete profile');
   }
 });
 
@@ -53,7 +82,6 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
-    // Reducer to handle setting user data
     setUser: (state, action) => {
       state.isAuthenticated = true;
       state.user = action.payload;
@@ -72,6 +100,19 @@ const authSlice = createSlice({
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Failed to register';
+      })
+      .addCase(deleteProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteProfile.fulfilled, (state) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+      })
+      .addCase(deleteProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || 'Failed to delete profile';
       })
       .addCase(login.pending, (state) => {
         state.loading = true;
